@@ -12,10 +12,10 @@
 #define CONFIG_MAGIC 0x4D435147  // "MCQG" - MeshCore MQTT Gateway
 
 // Default LoRa Settings
-#define DEFAULT_LORA_FREQ 433.65f
-#define DEFAULT_LORA_BW 250.0f
-#define DEFAULT_LORA_SF 11
-#define DEFAULT_LORA_CR 5
+#define DEFAULT_LORA_FREQ 869.618f
+#define DEFAULT_LORA_BW 62.5f
+#define DEFAULT_LORA_SF 8
+#define DEFAULT_LORA_CR 8
 #define DEFAULT_LORA_TX_POWER 0 // Transmit power in dBm
 
 // Default MQTT Settings

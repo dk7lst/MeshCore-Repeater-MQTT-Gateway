@@ -565,11 +565,11 @@ private:
             StaticJsonDocument<1024> doc;
             DeserializationError err = deserializeJson(doc, payload, length);
             if (err == DeserializationError::Ok && messageCallback) {
-                const char* gw = doc["gateway"] | "";
-                if (strcmp(gw, config.mqtt.clientId) == 0) {
+                const char* gw = doc["gateway"]; // | "";
+                if (gw && strcmp(gw, config.mqtt.clientId) == 0) {
                     return; // drop self
                 }
-                const char* hex = doc["data"] | nullptr;
+                const char* hex = doc["data"]; // doc["data"] | nullptr;
                 if (hex) {
                     size_t hexLen = strlen(hex);
                     size_t outLen = hexLen / 2;

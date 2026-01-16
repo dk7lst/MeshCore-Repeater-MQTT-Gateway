@@ -240,10 +240,29 @@ void setup()
         mqttHandler = new MQTTHandler(config);
 
         // Set callback for MQTT -> LoRa messages
-        mqttHandler->setMessageCallback([](const uint8_t *payload, size_t length)
-                                        {
+        mqttHandler->setMessageCallback(
+            [](const uint8_t *payload, size_t length) {
             Serial.printf("Forwarding MQTT message to LoRa (%d bytes)\n", length);
-            sendLoRaPacket(payload, length); });
+            unsigned long nowMs = millis();
+            uint32_t h = fnv1aHash32(payload, length);
+            if (!wasPacketSeenRecently(h, nowMs, 2000UL))
+            {
+                const uint8_t *pPathLen = payload + 1; // https://github.com/meshcore-dev/MeshCore/blob/main/docs/packet_structure.md
+                const uint8_t routeType = *payload & 3;
+                if (routeType == 0 || routeType == 3) pPathLen += 4; // skip transport codes
+                if (*pPathLen > 0 && (pPathLen[*pPathLen] == 0x29 || pPathLen[*pPathLen] == 0x4A)) Serial.println("   ↻ Packet skipped because path ending in 0x29 or 0x4A"); // TODO: Generalization and configurability needed! Check length!
+                else if (sendLoRaPacket(payload, length))
+                {
+                    Serial.println("   ↻ Packet forwarded");
+                    rememberPacket(h, millis());
+                }
+            }
+            else
+            {
+                Serial.println("   ↻ Skipped forward (duplicate seen recently)");
+            }
+            //sendLoRaPacket(payload, length);
+            });
 
         if (mqttHandler->begin())
         {
@@ -310,7 +329,9 @@ void loop()
     if (!configMode && mqttHandler && mqttHandler->isConnected() && now - lastStatsPublish > 60000)
     {
         publishStats();
+#if 0
         publishNeighbours(); // Also publish neighbor list with stats
+#endif
         lastStatsPublish = now;
     }
 
@@ -518,12 +539,12 @@ void handleLoRaPacket(uint8_t *data, size_t length, int rssi, float snr)
 
     // Print hex dump (first 32 bytes)
     Serial.print("   Data: ");
-    for (size_t i = 0; i < min(length, (size_t)32); i++)
+    for (size_t i = 0; i < length; ++i) //for (size_t i = 0; i < min(length, (size_t)32); i++)
     {
         Serial.printf("%02X ", data[i]);
     }
-    if (length > 32)
-        Serial.print("...");
+    //if (length > 32)
+    //    Serial.print("...");
     Serial.println();
 
     // Try to interpret as text if printable
@@ -634,8 +655,13 @@ void handleLoRaPacket(uint8_t *data, size_t length, int rssi, float snr)
         }
     }
 
-    // Forward to MQTT if connected
-    if (mqttHandler && mqttHandler->isConnected())
+    unsigned long nowMs = millis();
+    uint32_t h = fnv1aHash32(data, length);
+    if (wasPacketSeenRecently(h, nowMs, 1000UL))
+    {
+        Serial.println("   ↻ Skipping MQTT (echo - packet was sent by us)");
+    }
+    else if (mqttHandler && mqttHandler->isConnected()) // Forward to MQTT if connected
     {
         // If this was an ADVERT received over RF, publish a structured advert event
         if (parsedAdvert)
@@ -671,6 +697,7 @@ void handleLoRaPacket(uint8_t *data, size_t length, int rssi, float snr)
         packetsForwarded++;
     }
 
+#if 0
     // Optional: Repeat packet if configured as repeater
     // This is a simple repeater - just retransmit what we receive
     // In a real mesh implementation, you'd check hop count, routing, etc.
@@ -694,6 +721,7 @@ void handleLoRaPacket(uint8_t *data, size_t length, int rssi, float snr)
             Serial.println("   ↻ Skipped repeat (duplicate seen recently)");
         }
     }
+#endif
 }
 
 bool sendLoRaPacket(const uint8_t *data, size_t length)
@@ -705,6 +733,14 @@ bool sendLoRaPacket(const uint8_t *data, size_t length)
     }
 
     Serial.printf("\n📤 LoRa TX: %d bytes\n", length);
+    Serial.print("   Data: ");
+    for (size_t i = 0; i < length; ++i) //for (size_t i = 0; i < min(length, (size_t)32); i++)
+    {
+        Serial.printf("%02X ", data[i]);
+    }
+    //if (length > 32)
+    //    Serial.print("...");
+    Serial.println();
 
     // Transmit the packet
     int state = radio.transmit((uint8_t *)data, length);
