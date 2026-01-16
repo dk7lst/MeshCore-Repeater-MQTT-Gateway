@@ -250,7 +250,11 @@ void setup()
                 const uint8_t *pPathLen = payload + 1; // https://github.com/meshcore-dev/MeshCore/blob/main/docs/packet_structure.md
                 const uint8_t routeType = *payload & 3;
                 if (routeType == 0 || routeType == 3) pPathLen += 4; // skip transport codes
+#if 0
+                if (*pPathLen > 0 && pPathLen[*pPathLen] == 0x75) Serial.println("   ↻ Packet skipped because path ending in 0x75"); // TODO: Generalization and configurability needed! Check length!
+#else
                 if (*pPathLen > 0 && (pPathLen[*pPathLen] == 0x29 || pPathLen[*pPathLen] == 0x4A)) Serial.println("   ↻ Packet skipped because path ending in 0x29 or 0x4A"); // TODO: Generalization and configurability needed! Check length!
+#endif
                 else if (sendLoRaPacket(payload, length))
                 {
                     Serial.println("   ↻ Packet forwarded");
