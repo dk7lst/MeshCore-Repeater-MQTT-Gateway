@@ -12,11 +12,11 @@
 #define CONFIG_MAGIC 0x4D435147  // "MCQG" - MeshCore MQTT Gateway
 
 // Default LoRa Settings
-#define DEFAULT_LORA_FREQ 915.8f
+#define DEFAULT_LORA_FREQ 433.65f
 #define DEFAULT_LORA_BW 250.0f
 #define DEFAULT_LORA_SF 11
 #define DEFAULT_LORA_CR 5
-#define DEFAULT_LORA_TX_POWER 20
+#define DEFAULT_LORA_TX_POWER 0 // Transmit power in dBm
 
 // Default MQTT Settings
 #define DEFAULT_MQTT_SERVER "mqtt.example.com"
@@ -29,6 +29,10 @@
 // WiFi Settings
 #define DEFAULT_WIFI_SSID ""
 #define DEFAULT_WIFI_PASSWORD ""
+
+#define HELTEC_V3
+//#define LILYGO_LORA32_V21
+#define LILYGO_433 0 // 1: use SX1278 instead of SX1276 for 433 MHz
 
 // Pin definitions for common ESP32 LoRa boards
 #ifdef HELTEC_V3
@@ -317,7 +321,7 @@ inline GatewayConfig getDefaultConfig() {
 
     // Discovery defaults
     config.discovery.advertEnabled = false;
-    config.discovery.advertIntervalSec = 300; // 5 minutes
+    config.discovery.advertIntervalSec = 43200; // 12h
 
     // Location defaults
     config.location.latitude = 0.0f;

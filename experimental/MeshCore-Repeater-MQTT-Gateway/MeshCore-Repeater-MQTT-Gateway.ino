@@ -31,7 +31,11 @@ SX1262 radio = new Module(LORA_CS, LORA_DIO1, LORA_RST, LORA_BUSY);
 #elif defined(HELTEC_V3)
 SX1262 radio = new Module(LORA_CS, LORA_DIO0, LORA_RST, LORA_BUSY);
 #else
-SX1276 radio = new Module(LORA_CS, LORA_DIO0, LORA_RST, LORA_DIO1);
+  #if LILYGO_433
+    SX1278 radio = new Module(LORA_CS, LORA_DIO0, LORA_RST, LORA_DIO1);
+  #else
+    SX1276 radio = new Module(LORA_CS, LORA_DIO0, LORA_RST, LORA_DIO1);
+  #endif
 #endif
 
 // UI helpers for consistent boxed output
