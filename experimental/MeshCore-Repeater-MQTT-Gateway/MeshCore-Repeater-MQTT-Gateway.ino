@@ -253,7 +253,7 @@ void setup()
 #if 0
                 if (*pPathLen > 0 && pPathLen[*pPathLen] == 0x75) Serial.println("   ↻ Packet skipped because path ending in 0x75"); // TODO: Generalization and configurability needed! Check length!
 #else
-                if (*pPathLen > 0 && (pPathLen[*pPathLen] == 0x29 || pPathLen[*pPathLen] == 0x4A)) Serial.println("   ↻ Packet skipped because path ending in 0x29 or 0x4A"); // TODO: Generalization and configurability needed! Check length!
+                if (*pPathLen > 0 && (pPathLen[*pPathLen] == 0x29 || pPathLen[*pPathLen] == 0x4A || pPathLen[*pPathLen] == 0xD2)) Serial.println("   ↻ Packet skipped because path ending in 0x29 or 0x4A or 0xD2"); // TODO: Generalization and configurability needed! Check length!
 #endif
                 else if (sendLoRaPacket(payload, length))
                 {
